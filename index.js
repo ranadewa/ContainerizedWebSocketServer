@@ -14,6 +14,8 @@ const ClientInitWSMessageTypes = {
 var conCount = 0;
 var msgCount = 0;
 
+const timerMap = new Map();
+
 wss.on('connection', function connection(ws) {
 	conCount++;
 	console.log('new connection. Count : ' + conCount);
@@ -30,9 +32,17 @@ wss.on('connection', function connection(ws) {
 	if(command === ClientInitWSMessageTypes.CONNECTION_INIT) {
 		ws.send('INITIALIZED:');
 	} else if (command === ClientInitWSMessageTypes.DATA_SUBSCRIBE_REQUEST) {
-		ws.send('DATA:' + input.uniqueID + ':' + 'This is a test data message');
+		console.log('Uni ID ' + input.uniqueID);
+		const timer = setInterval((id) => {
+			ws.send('DATA:' + id + ':' + 'This is a test data message');
+		}, 1000, input.uniqueID);
+
+		timerMap.set(input.uniqueID, timer);
+
 	} else if (command === ClientInitWSMessageTypes.DATA_UNSUBSCRIBE_REQUEST) {
 		ws.send('DATA_UNSUBSCRIBED:' + input.uniqueID + ':');
+		clearInterval(timerMap.get(input.uniqueID));
+		timerMap.delete(input.uniqueID);
 	}	
   });
  
